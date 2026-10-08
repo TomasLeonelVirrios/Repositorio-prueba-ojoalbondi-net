@@ -1,0 +1,12 @@
+// Componentes básicos de interfaz: import { Boton, Campo, … } from '@/componentes/ui';
+export { Aviso } from './Aviso';
+export { Boton } from './Boton';
+export { Campo } from './Campo';
+export { Chip } from './Chip';
+export { Encabezado } from './Encabezado';
+export { HojaModal } from './HojaModal';
+export { Insignia } from './Insignia';
+export { Pantalla } from './Pantalla';
+export { Selector } from './Selector';
+export { Tarjeta } from './Tarjeta';
+export { Ayuda, Enlace, Etiqueta, Seccion, Subtitulo, TextoError, Titulo } from './Textos';
