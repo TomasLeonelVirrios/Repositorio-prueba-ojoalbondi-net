@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, FlatList, Pressable, Text, View } from 'react-native';
-import MapView, { Marker, Region } from 'react-native-maps';
+import { MapaOSM, MarcadorOSM, Region } from '../componentes/mapa/MapaOSM';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ayuda, Boton, Chip, Etiqueta, HojaModal, Seccion, Selector } from '../componentes/ui';
 import { ATRIBUCION_PARADAS } from '../constantes/textos';
@@ -103,6 +103,36 @@ export default function MapaPantalla() {
   const maximoCalor = calor && calor.size ? Math.max(...calor.values()) : 1;
   const totalReclamos = calor ? [...calor.values()].reduce((a, b) => a + b, 0) : 0;
 
+  const marcadoresParaOSM: MarcadorOSM[] = useMemo(() => {
+    return marcadores.map((p) => {
+      const elegida = seleccionada?.id === p.id;
+      if (modo === 'paradas') {
+        return {
+          id: p.id,
+          latitud: p.latitud,
+          longitud: p.longitud,
+          tipo: 'parada',
+          elegido: elegida,
+          nombre: nombreParada(p),
+        };
+      }
+      const cantidad = calor?.get(p.id) ?? 0;
+      const proporcion = cantidad / maximoCalor;
+      const diametro = Math.round(22 + 30 * Math.sqrt(proporcion));
+      return {
+        id: p.id,
+        latitud: p.latitud,
+        longitud: p.longitud,
+        tipo: 'calor',
+        cantidad,
+        color: colorCalor(proporcion),
+        diametro,
+        elegido: elegida,
+        nombre: `${nombreParada(p)}: ${cantidad} reclamos`,
+      };
+    });
+  }, [marcadores, seleccionada, modo, calor, maximoCalor]);
+
   // Android dibuja los marcadores personalizados como imagen: se redibujan un momento después de cada cambio
   const [redibujar, setRedibujar] = useState(true);
   const firma = marcadores.map((p) => p.id).join(',') + '|' + (seleccionada?.id ?? '') + modo + tema;
@@ -127,47 +157,17 @@ export default function MapaPantalla() {
 
   return (
     <View style={{ flex: 1, backgroundColor: colores.fondo }}>
-      <MapView
+      <MapaOSM
         style={{ flex: 1 }}
-        initialRegion={REGION_INICIAL}
+        regionInicial={REGION_INICIAL}
         onRegionChangeComplete={setRegion}
-        onPress={(e) => { if ((e.nativeEvent as { action?: string }).action !== 'marker-press') setSeleccionada(null); }}
-        showsMyLocationButton={false}
-        toolbarEnabled={false}
-        userInterfaceStyle={tema === 'oscuro' ? 'dark' : 'light'}
-      >
-        {marcadores.map((p) => {
-          const elegida = seleccionada?.id === p.id;
-          if (modo === 'paradas') {
-            return (
-              <Marker key={`p${p.id}-${elegida}`} coordinate={{ latitude: p.latitud, longitude: p.longitud }} onPress={() => setSeleccionada(p)}
-                tracksViewChanges={redibujar} anchor={{ x: 0.5, y: 0.5 }} zIndex={elegida ? 10 : 1} accessibilityLabel={nombreParada(p)}>
-                <View style={{
-                  width: elegida ? 34 : 24, height: elegida ? 34 : 24, borderRadius: 17, alignItems: 'center', justifyContent: 'center',
-                  backgroundColor: elegida ? colores.primario : colores.superficie, borderWidth: 2, borderColor: elegida ? '#FFFFFF' : colores.primarioOscuro,
-                }}>
-                  <Ionicons name="bus" size={elegida ? 17 : 12} color={elegida ? colores.sobrePrimario : colores.primarioOscuro} />
-                </View>
-              </Marker>
-            );
-          }
-          const cantidad = calor?.get(p.id) ?? 0;
-          const proporcion = cantidad / maximoCalor;
-          const diametro = 22 + 30 * Math.sqrt(proporcion);
-          return (
-            <Marker key={`c${p.id}-${elegida}`} coordinate={{ latitude: p.latitud, longitude: p.longitud }} onPress={() => setSeleccionada(p)}
-              tracksViewChanges={redibujar} anchor={{ x: 0.5, y: 0.5 }} zIndex={elegida ? 10 : Math.round(proporcion * 9)}
-              accessibilityLabel={`${nombreParada(p)}: ${cantidad} reclamos`}>
-              <View style={{
-                width: diametro, height: diametro, borderRadius: diametro / 2, alignItems: 'center', justifyContent: 'center',
-                backgroundColor: colorCalor(proporcion), opacity: 0.88, borderWidth: elegida ? 3 : 0, borderColor: colores.texto,
-              }}>
-                <Text style={{ fontSize: 11, fontWeight: '800', color: '#1B2734' }}>{cantidad}</Text>
-              </View>
-            </Marker>
-          );
-        })}
-      </MapView>
+        onMapPress={() => setSeleccionada(null)}
+        onMarkerPress={(id) => {
+          const elegida = marcadores.find((p) => p.id === id);
+          if (elegida) setSeleccionada(elegida);
+        }}
+        marcadores={marcadoresParaOSM}
+      />
 
       {/* Controles superiores: modo y filtros */}
       <SafeAreaView edges={['top']} style={{ position: 'absolute', top: 0, left: 0, right: 0 }} pointerEvents="box-none">

@@ -127,7 +127,7 @@ Requiere Node 18+ y **Expo Go actualizado** (SDK 57). Recomendado: tener el proy
 - `npm run tipos`: verificación de tipos de TypeScript.
 - `npm run revisar-dependencias`: controla que las librerías coincidan con el SDK de Expo.
 - Librerías nativas nuevas: instalarlas con `npx expo install nombre`, nunca con `npm install`.
-- Mapa en builds propios de Android: cargar la API key de Google Maps en `app.json` (`react-native-maps`).
+- Mapas: utiliza OpenStreetMap (libre y sin API key ni configuración en Google Cloud). Ver detalles y resolución de la incidencia en [BITACORA_MAPA_OPENSTREETMAP.md](file:///c:/Users/Leo/Desktop/Ojoalbondi-08.10/ojoalbondi-app/BITACORA_MAPA_OPENSTREETMAP.md).
 
 ---
 

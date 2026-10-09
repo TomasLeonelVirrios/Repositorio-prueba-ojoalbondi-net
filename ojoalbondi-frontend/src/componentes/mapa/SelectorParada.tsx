@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, FlatList, Keyboard, Modal, Pressable, Text, TextInput, View } from 'react-native';
-import MapView, { Marker, Region } from 'react-native-maps';
+import { MapaOSM, MapaOSMRef, MarcadorOSM, Region } from './MapaOSM';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ATRIBUCION_PARADAS } from '../../constantes/textos';
 import { useTema } from '../../contextos/TemaContexto';
@@ -39,7 +39,7 @@ export function SelectorParada({
   onConfirmar: (p: Parada, texto: string) => void;
 }) {
   const { colores, tema } = useTema();
-  const mapa = useRef<MapView>(null);
+  const mapa = useRef<MapaOSMRef>(null);
 
   const [paradas, setParadas] = useState<Parada[] | null>(null);
   const [errorParadas, setErrorParadas] = useState(false);
@@ -126,9 +126,19 @@ export function SelectorParada({
   // La parada elegida siempre se dibuja, aunque quede fuera del filtro
   const marcadores = seleccionada && !visibles.some((p) => p.id === seleccionada.id) ? [...visibles, seleccionada] : visibles;
 
+  const marcadoresParaOSM: MarcadorOSM[] = useMemo(() => {
+    return marcadores.map((p) => ({
+      id: p.id,
+      latitud: p.latitud,
+      longitud: p.longitud,
+      tipo: 'parada',
+      elegido: seleccionada?.id === p.id,
+      nombre: nombreParada(p),
+    }));
+  }, [marcadores, seleccionada]);
+
   // ---------- Acciones ----------
-  const irA = (p: Punto, zoom = ZOOM_CALLE) =>
-    mapa.current?.animateToRegion({ latitude: p.latitud, longitude: p.longitud, ...zoom }, 400);
+  const irA = (p: Punto, zoomNivel = 16) => mapa.current?.animarA(p, zoomNivel);
 
   const buscar = async (texto = busqueda) => {
     if (!texto.trim()) return;
@@ -196,65 +206,24 @@ export function SelectorParada({
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onCerrar}>
       <View style={{ flex: 1, backgroundColor: colores.fondo }}>
-        <MapView
+        <MapaOSM
           ref={mapa}
           style={{ flex: 1 }}
-          initialRegion={regionInicial}
+          regionInicial={regionInicial}
           onRegionChangeComplete={setRegion}
-          onPress={(e) => {
-            if ((e.nativeEvent as any).action === 'marker-press') return; // iOS lo dispara también al tocar un marcador
+          onMapPress={() => {
             Keyboard.dismiss();
             setResultados([]);
           }}
-          showsUserLocation={permisoUbicacion}
-          showsMyLocationButton={false}
-          userInterfaceStyle={tema === 'oscuro' ? 'dark' : 'light'}
-          toolbarEnabled={false}
-        >
-          {marcadores.map((p) => {
-            const elegida = seleccionada?.id === p.id;
-            return (
-              <Marker
-                key={`${p.id}-${elegida ? 1 : 0}`}
-                coordinate={{ latitude: p.latitud, longitude: p.longitud }}
-                onPress={() => {
-                  Keyboard.dismiss();
-                  setResultados([]);
-                  setSeleccionada(p);
-                }}
-                tracksViewChanges={redibujar}
-                anchor={{ x: 0.5, y: 0.5 }}
-                zIndex={elegida ? 10 : 1}
-                accessibilityLabel={nombreParada(p)}
-              >
-                <View
-                  style={{
-                    width: elegida ? 36 : 26,
-                    height: elegida ? 36 : 26,
-                    borderRadius: 18,
-                    backgroundColor: elegida ? colores.primario : colores.superficie,
-                    borderWidth: 2,
-                    borderColor: elegida ? '#fff' : colores.primarioOscuro,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  <Ionicons name="bus" size={elegida ? 18 : 13} color={elegida ? colores.sobrePrimario : colores.primarioOscuro} />
-                </View>
-              </Marker>
-            );
-          })}
-
-          {/* Dónde quedó la dirección buscada, para ubicarse entre las paradas */}
-          {puntoBuscado && (
-            <Marker
-              coordinate={{ latitude: puntoBuscado.latitud, longitude: puntoBuscado.longitud }}
-              pinColor={colores.peligro}
-              tappable={false}
-              zIndex={5}
-            />
-          )}
-        </MapView>
+          onMarkerPress={(id) => {
+            Keyboard.dismiss();
+            setResultados([]);
+            const p = paradas?.find((x) => x.id === id);
+            if (p) setSeleccionada(p);
+          }}
+          marcadores={marcadoresParaOSM}
+          puntoBuscado={puntoBuscado}
+        />
 
         {/* Buscador de calle y altura + filtro de línea */}
         <SafeAreaView edges={['top']} style={{ position: 'absolute', top: 0, left: 0, right: 0 }} pointerEvents="box-none">

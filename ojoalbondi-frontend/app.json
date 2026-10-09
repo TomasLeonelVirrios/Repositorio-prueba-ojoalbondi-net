@@ -23,8 +23,7 @@
       ["expo-image-picker", {
         "photosPermission": "Para adjuntar una foto opcional al reporte.",
         "cameraPermission": "Para sacar una foto opcional del reporte."
-      }],
-      ["react-native-maps", { "androidGoogleMapsApiKey": "TU_API_KEY_DE_GOOGLE_MAPS" }]
+      }]
     ]
   }
 }
