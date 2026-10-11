@@ -1,0 +1,16 @@
+{
+  "name": "ojoalbondi-backend",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Base de datos (Supabase) y scripts de mantenimiento de OjoAlBondi",
+  "scripts": {
+    "armar-instalacion": "node scripts/armar-instalacion.mjs",
+    "paradas": "node scripts/importar-paradas-osm.mjs",
+    "datos-prueba": "node scripts/datos-prueba.mjs",
+    "datos-prueba:borrar": "node scripts/datos-prueba.mjs --borrar"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.117.2"
+  }
+}
