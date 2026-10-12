@@ -107,13 +107,20 @@ export default function NuevoReclamoPantalla() {
     // base64: el contenido de la foto se sube a Storage (ver servicios/reclamos.ts)
     const opciones = { mediaTypes: ['images'] as ImagePicker.MediaType[], quality: 0.5, base64: true };
     const obtener = async (conCamara: boolean) => {
-      const permiso = conCamara ? await ImagePicker.requestCameraPermissionsAsync() : await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (!permiso.granted) return;
-      const resultado = conCamara ? await ImagePicker.launchCameraAsync(opciones) : await ImagePicker.launchImageLibraryAsync(opciones);
-      const foto = resultado.canceled ? null : resultado.assets[0];
-      if (!foto) return;
-      if (!foto.base64) return Alert.alert('Foto', 'No se pudo leer la foto. Probá de nuevo.');
-      actualizar({ fotoUri: foto.uri, fotoBase64: foto.base64 });
+      try {
+        const permiso = conCamara ? await ImagePicker.requestCameraPermissionsAsync() : await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if (!permiso.granted) return;
+        const resultado = conCamara ? await ImagePicker.launchCameraAsync(opciones) : await ImagePicker.launchImageLibraryAsync(opciones);
+        const foto = resultado.canceled ? null : resultado.assets[0];
+        if (!foto) return;
+        if (!foto.base64) return Alert.alert('Foto', 'No se pudo leer la foto. Probá de nuevo.');
+        actualizar({ fotoUri: foto.uri, fotoBase64: foto.base64 });
+      } catch {
+        // algunos celulares no tienen galería o cámara disponible: antes el error quedaba sin aviso
+        Alert.alert('Foto', conCamara
+          ? 'No se pudo abrir la cámara. Probá eligiendo una foto de la galería.'
+          : 'No se pudo abrir la galería. Probá sacando la foto con la cámara.');
+      }
     };
     Alert.alert('Foto', 'Podés sacarla ahora o elegir una de la galería.', [
       { text: 'Sacar foto', onPress: () => obtener(true) },

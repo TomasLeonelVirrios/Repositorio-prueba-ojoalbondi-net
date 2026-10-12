@@ -25,6 +25,7 @@ const ConexionContexto = createContext<ValorConexion>({
 });
 
 const SEGUNDOS_AVISO_SINCRONIZADOS = 6;
+const SEGUNDOS_ENTRE_REINTENTOS = 30;
 
 export function ProveedorConexion({ children }: { children: ReactNode }) {
   const { sesion } = useSesion();
@@ -80,6 +81,14 @@ export function ProveedorConexion({ children }: { children: ReactNode }) {
   useEffect(() => {
     actualizarPendientes();
   }, [actualizarPendientes]);
+
+  // Si un envío falló por la red justo cuando volvía la señal, NetInfo no vuelve a avisar:
+  // mientras haya conexión y borradores esperando, se reintenta cada 30 segundos.
+  useEffect(() => {
+    if (!conectado || borradoresPendientes === 0) return;
+    const id = setInterval(sincronizar, SEGUNDOS_ENTRE_REINTENTOS * 1000);
+    return () => clearInterval(id);
+  }, [conectado, borradoresPendientes, sincronizar]);
 
   return (
     <ConexionContexto.Provider value={{ conectado, borradoresPendientes, borradoresSincronizados, borradoresConError, actualizarPendientes, reintentar, descartar }}>

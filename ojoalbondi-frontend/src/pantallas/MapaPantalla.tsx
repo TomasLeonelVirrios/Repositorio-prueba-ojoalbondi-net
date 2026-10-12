@@ -199,7 +199,7 @@ export default function MapaPantalla() {
             <View style={{ flex: 1 }}>
               <Text style={{ fontSize: 15, fontWeight: '700', color: colores.texto }}>{nombreParada(seleccionada)}</Text>
               <Text style={{ fontSize: 12.5, color: colores.textoSecundario, marginTop: 3 }}>
-                {seleccionada.lineas.length ? `Líneas ${seleccionada.lineas.join(', ')}` : 'Líneas sin informar'}
+                {seleccionada.lineas.length ? `Líneas ${seleccionada.lineas.join(', ')}` : 'Todavía no sabemos qué líneas paran acá'}
               </Text>
             </View>
             <Pressable onPress={() => setSeleccionada(null)} accessibilityRole="button" accessibilityLabel="Cerrar"

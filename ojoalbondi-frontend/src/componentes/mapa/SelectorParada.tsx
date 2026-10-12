@@ -108,7 +108,7 @@ export function SelectorParada({
         (p) =>
           Math.abs(p.latitud - region.latitude) < margenLat &&
           Math.abs(p.longitud - region.longitude) < margenLon &&
-          // si OSM no informa las líneas de una parada, se muestra igual
+          // si todavía no se sabe qué líneas paran (sin datos de Moovit), se muestra igual: puede ser de la línea
           (!filtrarPorLinea || p.lineas.length === 0 || p.lineas.includes(linea))
       )
       .sort((a, b) => distanciaKm(a, centro) - distanciaKm(b, centro))
@@ -150,8 +150,8 @@ export function SelectorParada({
   };
 
   const centrarEnResultado = (r: ResultadoBusqueda) => {
+    // se deja lo que escribió la persona: el geocodificador a veces nombra la misma esquina desde la otra calle
     setResultados([]);
-    setBusqueda(r.texto);
     setPuntoBuscado(r.punto);
     irA(r.punto);
   };
@@ -334,7 +334,7 @@ export function SelectorParada({
                   {nombreParada(seleccionada)}
                 </Text>
                 <Text style={{ fontSize: 12.5, color: colores.textoSecundario, marginTop: 4 }}>
-                  {seleccionada.lineas.length ? `Líneas ${seleccionada.lineas.join(', ')}` : 'Líneas sin informar'}
+                  {seleccionada.lineas.length ? `Líneas ${seleccionada.lineas.join(', ')}` : 'Todavía no sabemos qué líneas paran acá'}
                 </Text>
               </>
             ) : (
