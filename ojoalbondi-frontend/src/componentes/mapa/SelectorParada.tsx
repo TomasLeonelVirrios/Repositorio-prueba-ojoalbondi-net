@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, FlatList, Keyboard, Modal, Pressable, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, FlatList, Keyboard, Linking, Modal, Platform, Pressable, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ATRIBUCION_PARADAS } from '../../constantes/textos';
 import { useTema } from '../../contextos/TemaContexto';
@@ -53,6 +53,7 @@ export function SelectorParada({
   const [buscando, setBuscando] = useState(false);
   const [resultados, setResultados] = useState<ResultadoBusqueda[]>([]);
   const [sinResultados, setSinResultados] = useState(false);
+  const [faltaPermisoBusqueda, setFaltaPermisoBusqueda] = useState(false);
   const [puntoBuscado, setPuntoBuscado] = useState<Punto | null>(null);
 
   const [permisoUbicacion, setPermisoUbicacion] = useState(false);
@@ -141,7 +142,15 @@ export function SelectorParada({
     Keyboard.dismiss();
     setBuscando(true);
     setSinResultados(false);
+    setFaltaPermisoBusqueda(false);
     setResultados([]);
+    // En Android el buscador de direcciones del celular solo responde con el permiso de ubicación:
+    // sin él decía "No encontramos esa dirección" aunque existiera
+    if (Platform.OS === 'android' && !(await Location.getForegroundPermissionsAsync()).granted) {
+      setBuscando(false);
+      setFaltaPermisoBusqueda(true);
+      return;
+    }
     const encontrados = await buscarDireccion(texto);
     setBuscando(false);
     if (encontrados.length === 0) setSinResultados(true);
@@ -156,10 +165,21 @@ export function SelectorParada({
     irA(r.punto);
   };
 
+  const darPermisoYBuscar = async () => {
+    const { granted, canAskAgain } = await Location.requestForegroundPermissionsAsync();
+    if (granted) {
+      setPermisoUbicacion(true);
+      buscar();
+    } else if (!canAskAgain) {
+      Linking.openSettings();   // lo rechazó para siempre: solo se puede dar desde la configuración del celular
+    }
+  };
+
   const limpiarBusqueda = () => {
     setBusqueda('');
     setResultados([]);
     setSinResultados(false);
+    setFaltaPermisoBusqueda(false);
     setPuntoBuscado(null);
   };
 
@@ -244,7 +264,7 @@ export function SelectorParada({
                 <Ionicons name="search" size={18} color={colores.textoTenue} />
                 <TextInput
                   value={busqueda}
-                  onChangeText={(t) => { setBusqueda(t); setSinResultados(false); }}
+                  onChangeText={(t) => { setBusqueda(t); setSinResultados(false); setFaltaPermisoBusqueda(false); }}
                   onSubmitEditing={() => buscar()}
                   placeholder="Calle y altura (ej: Tucumán 750)"
                   placeholderTextColor={colores.textoTenue}
@@ -289,7 +309,17 @@ export function SelectorParada({
               </View>
             )}
 
-            {!!linea && resultados.length === 0 && !sinResultados && (
+            {faltaPermisoBusqueda && (
+              <View style={{ marginTop: 8, marginLeft: 54, backgroundColor: colores.superficie, borderRadius: 14, borderWidth: 1, borderColor: colores.borde, padding: 12 }}>
+                <Text style={{ fontSize: 13, color: colores.texto }}>Para buscar direcciones, la app necesita el permiso de ubicación.</Text>
+                <Text style={{ fontSize: 12, color: colores.textoSecundario, marginTop: 2 }}>
+                  También podés mover el mapa y tocar la parada.
+                </Text>
+                <Boton titulo="Dar permiso" variante="contorno" onPress={darPermisoYBuscar} style={{ marginTop: 10 }} />
+              </View>
+            )}
+
+            {!!linea && resultados.length === 0 && !sinResultados && !faltaPermisoBusqueda && (
               <Pressable
                 onPress={() => setSoloLinea((v) => !v)}
                 accessibilityRole="switch"
