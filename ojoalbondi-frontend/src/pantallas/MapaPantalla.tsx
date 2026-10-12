@@ -42,6 +42,7 @@ export default function MapaPantalla() {
   const [paradas, setParadas] = useState<Parada[] | null>(null);
   const [errorParadas, setErrorParadas] = useState(false);
   const [region, setRegion] = useState<RegionMapa>(REGION_INICIAL);
+  const [altoFicha, setAltoFicha] = useState(0);   // alto de la ficha de la parada: la atribución va justo encima
   const [modo, setModo] = useState<Modo>('paradas');
 
   // Filtros
@@ -175,7 +176,7 @@ export default function MapaPantalla() {
       </SafeAreaView>
 
       {/* Leyenda y atribución */}
-      <View pointerEvents="none" style={{ position: 'absolute', left: 10, bottom: seleccionada ? 300 : 14, gap: 6 }}>
+      <View pointerEvents="none" style={{ position: 'absolute', left: 10, bottom: seleccionada ? altoFicha + 10 : 14, gap: 6 }}>
         {modo === 'calor' && calor && calor.size > 0 && (
           <View style={{ backgroundColor: colores.superficie, borderRadius: 10, padding: 8, borderWidth: 1, borderColor: colores.borde }}>
             <Text style={{ fontSize: 11, fontWeight: '700', color: colores.texto, marginBottom: 4 }}>{totalReclamos} reclamos · sin anulados</Text>
@@ -193,7 +194,7 @@ export default function MapaPantalla() {
 
       {/* Parada seleccionada */}
       {seleccionada && (
-        <View style={{ position: 'absolute', left: 0, right: 0, bottom: 0, backgroundColor: colores.superficie, borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 18, maxHeight: 290, borderTopWidth: 1, borderColor: colores.borde }}>
+        <View onLayout={(e) => setAltoFicha(e.nativeEvent.layout.height)} style={{ position: 'absolute', left: 0, right: 0, bottom: 0, backgroundColor: colores.superficie, borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 18, maxHeight: 290, borderTopWidth: 1, borderColor: colores.borde }}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10 }}>
             <View style={{ flex: 1 }}>
               <Text style={{ fontSize: 15, fontWeight: '700', color: colores.texto }}>{nombreParada(seleccionada)}</Text>
