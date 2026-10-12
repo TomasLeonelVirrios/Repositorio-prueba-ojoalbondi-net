@@ -103,7 +103,7 @@ export default function DetalleReclamo() {
         {!!reclamo.descripcion && <Fila dato="Descripción" valor={reclamo.descripcion} />}
         <Fila dato="Ciudadano" valor={`${reclamo.ciudadanoNombre} ${reclamo.ciudadanoApellido}`} />
         {reclamo.latitud !== null && reclamo.longitud !== null && (
-          <MiniMapa punto={{ latitud: reclamo.latitud, longitud: reclamo.longitud }} onPress={() => {}} />
+          <MiniMapa punto={{ latitud: reclamo.latitud, longitud: reclamo.longitud }} />
         )}
         {urlFoto && (
           <Image source={{ uri: urlFoto }} style={{ width: '100%', height: 200, borderRadius: 12, marginTop: 10 }}

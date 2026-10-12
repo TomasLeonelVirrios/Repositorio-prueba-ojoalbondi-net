@@ -23,10 +23,10 @@ export function aHora(d: Date): string {
   return `${dosDigitos(d.getHours())}:${dosDigitos(d.getMinutes())}`;
 }
 
-/** Fecha y hora para mostrar: '21/09/2026 14:30 hs'. */
+/** Fecha y hora para mostrar: '21/09/2026 14:30 hs' (toLocaleDateString daba '21/9/2026' en Android). */
 export function fechaHoraArgentina(valor: string): string {
   const d = new Date(valor);
-  return `${d.toLocaleDateString('es-AR')} ${aHora(d)} hs`;
+  return `${fechaArgentina(aFechaISO(d))} ${aHora(d)} hs`;
 }
 
 export function diasDesde(valor: string): number {

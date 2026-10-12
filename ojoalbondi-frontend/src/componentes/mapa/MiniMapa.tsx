@@ -3,14 +3,18 @@ import { useTema } from '../../contextos/TemaContexto';
 import { Punto } from '../../tipos';
 import { Mapa } from './Mapa';
 
-/** Vista previa chica (no interactiva) del punto elegido. */
-export function MiniMapa({ punto, onPress }: { punto: Punto; onPress: () => void }) {
+/**
+ * Vista previa chica (no interactiva) del punto elegido.
+ * Sin onPress es solo para ver (detalle de la empresa): no se anuncia como botón.
+ */
+export function MiniMapa({ punto, onPress }: { punto: Punto; onPress?: () => void }) {
   const { colores, tema } = useTema();
   return (
     <Pressable
       onPress={onPress}
-      accessibilityRole="button"
-      accessibilityLabel="Cambiar la parada en el mapa"
+      disabled={!onPress}
+      accessibilityRole={onPress ? 'button' : 'image'}
+      accessibilityLabel={onPress ? 'Cambiar la parada en el mapa' : 'Mapa con la ubicación del reclamo'}
       style={{ height: 140, borderRadius: 12, overflow: 'hidden', borderWidth: 1.3, borderColor: colores.borde, marginTop: 8 }}
     >
       <View pointerEvents="none" style={{ flex: 1 }}>

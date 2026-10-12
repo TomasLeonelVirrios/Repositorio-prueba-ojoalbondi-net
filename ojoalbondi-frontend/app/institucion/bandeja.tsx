@@ -1,5 +1,5 @@
 import { useFocusEffect, useRouter } from 'expo-router';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { ActivityIndicator, FlatList, Pressable, RefreshControl, Text, View } from 'react-native';
 import { TarjetaReclamo } from '@/componentes/reclamos/TarjetaReclamo';
 import { Encabezado, TapaBarraEstado, TextoError } from '@/componentes/ui';
@@ -25,10 +25,6 @@ export default function Bandeja() {
   const [cuentas, setCuentas] = useState<Record<Estado, number> | null>(null);
   const [lineas, setLineas] = useState<string[] | null>(null);
 
-  useEffect(() => {
-    if (perfil?.rol === 'empresa') lineasHabilitadas().then(setLineas).catch(() => setLineas([]));
-  }, [perfil]);
-
   // Cada recarga desde el principio invalida las respuestas anteriores (por ejemplo, al cambiar de filtro rápido)
   const recarga = useRef(0);
   const cargandoMas = useRef(false);   // evita pedir dos veces la misma página al llegar al final
@@ -46,7 +42,11 @@ export default function Bandeja() {
       setPagina(siguiente);
       setHayMas(nuevos.length === TAMANIO_PAGINA_BANDEJA);
       setError('');
-      if (desdeElPrincipio) contarPorEstado().then(setCuentas).catch(() => {});
+      if (desdeElPrincipio) {
+        contarPorEstado().then(setCuentas).catch(() => {});
+        // se pide junto con la lista: si falló sin conexión, no se dice "Sin líneas habilitadas" y se reintenta al recargar
+        if (perfil?.rol === 'empresa') lineasHabilitadas().then(setLineas).catch(() => {});
+      }
     } catch {
       if (numero === recarga.current) setError('No se pudieron cargar los reclamos. Revisá tu conexión.');
     } finally {
@@ -56,7 +56,7 @@ export default function Bandeja() {
         setActualizando(false);
       }
     }
-  }, [pagina, soloPendientes]);
+  }, [pagina, soloPendientes, perfil?.rol]);
 
   // Recargar al volver a la pantalla (por ejemplo, después de cambiar un estado)
   useFocusEffect(useCallback(() => { cargar(true); }, [soloPendientes]));
@@ -87,7 +87,7 @@ export default function Bandeja() {
               onPress={() => { setSoloPendientes(valor); setCargando(true); }}
               accessibilityRole="button"
               accessibilityState={{ selected: soloPendientes === valor }}
-              style={{ flex: 1, minHeight: 40, justifyContent: 'center', borderRadius: 8, alignItems: 'center', backgroundColor: soloPendientes === valor ? colores.primarioOscuro : 'transparent' }}
+              style={{ flex: 1, minHeight: 44, justifyContent: 'center', borderRadius: 8, alignItems: 'center', backgroundColor: soloPendientes === valor ? colores.primarioOscuro : 'transparent' }}
             >
               <Text style={{ fontSize: 13, fontWeight: '600', color: soloPendientes === valor ? '#FFFFFF' : colores.textoSecundario }}>{texto}</Text>
             </Pressable>
@@ -112,8 +112,10 @@ export default function Bandeja() {
         refreshControl={<RefreshControl refreshing={actualizando} onRefresh={() => { setActualizando(true); cargar(true); }} tintColor={colores.primario} />}
         onEndReachedThreshold={0.4}
         onEndReached={() => { if (hayMas && !cargando && reclamos.length) cargar(false); }}
+        // con error de carga solo queda el aviso de arriba: "No hay reclamos" sería falso
         ListEmptyComponent={cargando
           ? <ActivityIndicator color={colores.primario} style={{ marginTop: 30 }} />
+          : error ? null
           : <Text style={{ textAlign: 'center', padding: 40, color: colores.textoTenue }}>No hay reclamos {soloPendientes ? 'pendientes' : 'asignados'}.</Text>}
         renderItem={({ item }) => (
           <View style={{ paddingHorizontal: 20 }}>
