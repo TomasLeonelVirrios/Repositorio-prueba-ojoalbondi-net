@@ -9,5 +9,6 @@ export { HojaModal } from './HojaModal';
 export { Insignia } from './Insignia';
 export { Pantalla } from './Pantalla';
 export { Selector } from './Selector';
+export { TapaBarraEstado } from './TapaBarraEstado';
 export { Tarjeta } from './Tarjeta';
 export { Ayuda, Enlace, Etiqueta, Seccion, Subtitulo, TextoError, Titulo } from './Textos';

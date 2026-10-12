@@ -1,7 +1,7 @@
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { ActivityIndicator, Alert, ScrollView, Text, View } from 'react-native';
-import { Ayuda, Boton, Encabezado, Etiqueta, HojaModal, Insignia, Seccion, Selector, Tarjeta, TextoError } from '@/componentes/ui';
+import { Ayuda, Boton, Encabezado, Etiqueta, HojaModal, Insignia, Seccion, Selector, TapaBarraEstado, Tarjeta, TextoError } from '@/componentes/ui';
 import { useTema } from '@/contextos/TemaContexto';
 import {
   activarSuscripcion, LineaConSuscripcion, listarLineasConSuscripcion, listarOrganizaciones, Organizacion, suspenderSuscripcion,
@@ -75,44 +75,47 @@ export default function Suscripciones() {
   };
 
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: colores.fondo }} contentContainerStyle={{ paddingBottom: 40 }}>
-      <Encabezado antetitulo="ADMINISTRACIÓN" titulo="Suscripciones por línea" detalle="Qué empresa gestiona los reclamos de cada línea" />
-      <View style={{ padding: 20, width: '100%', maxWidth: 460, alignSelf: 'center' }}>
-        <Ayuda style={{ marginTop: 0, marginBottom: 10 }}>
-          Una sola empresa por línea. Sin suscripción activa, los reclamos de la línea los gestiona solo el municipio.
-        </Ayuda>
-        {!!error && <TextoError>{error}</TextoError>}
-        {lineas === null ? <ActivityIndicator color={colores.primario} style={{ marginTop: 30 }} /> : lineas.map((l) => (
-          <Tarjeta key={l.linea}>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Text style={{ fontSize: 16, fontWeight: '800', color: colores.texto }}>Línea {l.linea}</Text>
-              {l.suscripcionActiva ? <Insignia tipo="Atendido" texto="Suscripción activa" /> : <Insignia tipo="Anulado" texto="Sin suscripción" />}
-            </View>
-            <Text style={{ fontSize: 12.5, color: colores.textoSecundario, marginTop: 6 }}>
-              Opera: {l.empresaOperadora?.nombre ?? 'sin dato'}
-            </Text>
-            <Text style={{ fontSize: 13, color: colores.texto, marginTop: 3 }}>
+    <View style={{ flex: 1, backgroundColor: colores.fondo }}>
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 40 }}>
+        <Encabezado antetitulo="ADMINISTRACIÓN" titulo="Suscripciones por línea" detalle="Qué empresa gestiona los reclamos de cada línea" />
+        <View style={{ padding: 20, width: '100%', maxWidth: 460, alignSelf: 'center' }}>
+          <Ayuda style={{ marginTop: 0, marginBottom: 10 }}>
+            Una sola empresa por línea. Sin suscripción activa, los reclamos de la línea los gestiona solo el municipio.
+          </Ayuda>
+          {!!error && <TextoError>{error}</TextoError>}
+          {lineas === null ? <ActivityIndicator color={colores.primario} style={{ marginTop: 30 }} /> : lineas.map((l) => (
+            <Tarjeta key={l.linea}>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Text style={{ fontSize: 16, fontWeight: '800', color: colores.texto }}>Línea {l.linea}</Text>
+                {l.suscripcionActiva ? <Insignia tipo="Atendido" texto="Suscripción activa" /> : <Insignia tipo="Anulado" texto="Sin suscripción" />}
+              </View>
+              <Text style={{ fontSize: 12.5, color: colores.textoSecundario, marginTop: 6 }}>
+                Opera: {l.empresaOperadora?.nombre ?? 'sin dato'}
+              </Text>
+              <Text style={{ fontSize: 13, color: colores.texto, marginTop: 3 }}>
+                {l.suscripcionActiva
+                  ? `Gestiona: ${l.suscripcionActiva.organizacion.nombre}${l.suscripcionActiva.aprobadaEn ? ` · desde ${fechaArgentina(l.suscripcionActiva.aprobadaEn)}` : ''}`
+                  : 'Gestiona: Municipio'}
+              </Text>
               {l.suscripcionActiva
-                ? `Gestiona: ${l.suscripcionActiva.organizacion.nombre}${l.suscripcionActiva.aprobadaEn ? ` · desde ${fechaArgentina(l.suscripcionActiva.aprobadaEn)}` : ''}`
-                : 'Gestiona: Municipio'}
-            </Text>
-            {l.suscripcionActiva
-              ? <Boton titulo="Suspender suscripción" variante="peligro" onPress={() => suspender(l)} style={{ marginTop: 12 }} />
-              : <Boton titulo="Activar suscripción" variante="contorno" onPress={() => abrir(l)} style={{ marginTop: 12 }} />}
-          </Tarjeta>
-        ))}
-      </View>
+                ? <Boton titulo="Suspender suscripción" variante="peligro" onPress={() => suspender(l)} style={{ marginTop: 12 }} />
+                : <Boton titulo="Activar suscripción" variante="contorno" onPress={() => abrir(l)} style={{ marginTop: 12 }} />}
+            </Tarjeta>
+          ))}
+        </View>
 
-      <HojaModal visible={!!lineaEditada} onCerrar={() => setLineaEditada(null)}>
-        <Seccion style={{ marginTop: 0 }}>Activar suscripción · Línea {lineaEditada?.linea}</Seccion>
-        <Ayuda style={{ marginTop: 0 }}>La empresa verá todos los reclamos de la línea, también los anteriores.</Ayuda>
-        <Etiqueta>Empresa</Etiqueta>
-        <Selector valor={empresaElegida} opciones={empresas.map((e) => e.nombre)} textoVacio="Elegí una empresa" titulo="Empresa" onCambiar={setEmpresaElegida} />
-        {lineaEditada?.empresaOperadora && <Ayuda>Según el relevamiento, la línea la opera {lineaEditada.empresaOperadora.nombre}.</Ayuda>}
-        {!!errorHoja && <TextoError>{errorHoja}</TextoError>}
-        <Boton titulo="Activar" onPress={activar} cargando={guardando} />
-        <Boton titulo="Cancelar" variante="secundario" onPress={() => setLineaEditada(null)} />
-      </HojaModal>
-    </ScrollView>
+        <HojaModal visible={!!lineaEditada} onCerrar={() => setLineaEditada(null)}>
+          <Seccion style={{ marginTop: 0 }}>Activar suscripción · Línea {lineaEditada?.linea}</Seccion>
+          <Ayuda style={{ marginTop: 0 }}>La empresa verá todos los reclamos de la línea, también los anteriores.</Ayuda>
+          <Etiqueta>Empresa</Etiqueta>
+          <Selector valor={empresaElegida} opciones={empresas.map((e) => e.nombre)} textoVacio="Elegí una empresa" titulo="Empresa" onCambiar={setEmpresaElegida} />
+          {lineaEditada?.empresaOperadora && <Ayuda>Según el relevamiento, la línea la opera {lineaEditada.empresaOperadora.nombre}.</Ayuda>}
+          {!!errorHoja && <TextoError>{errorHoja}</TextoError>}
+          <Boton titulo="Activar" onPress={activar} cargando={guardando} />
+          <Boton titulo="Cancelar" variante="secundario" onPress={() => setLineaEditada(null)} />
+        </HojaModal>
+      </ScrollView>
+      <TapaBarraEstado />
+    </View>
   );
 }

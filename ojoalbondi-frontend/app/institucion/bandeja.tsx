@@ -2,7 +2,7 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, FlatList, Pressable, RefreshControl, Text, View } from 'react-native';
 import { TarjetaReclamo } from '@/componentes/reclamos/TarjetaReclamo';
-import { Encabezado, TextoError } from '@/componentes/ui';
+import { Encabezado, TapaBarraEstado, TextoError } from '@/componentes/ui';
 import { ESTADOS } from '@/constantes/estados';
 import { useSesion } from '@/contextos/SesionContexto';
 import { useTema } from '@/contextos/TemaContexto';
@@ -102,24 +102,27 @@ export default function Bandeja() {
   );
 
   return (
-    <FlatList
-      style={{ flex: 1, backgroundColor: colores.fondo }}
-      data={reclamos}
-      keyExtractor={(r) => r.id}
-      ListHeaderComponent={encabezado}
-      contentContainerStyle={{ paddingBottom: 30 }}
-      refreshControl={<RefreshControl refreshing={actualizando} onRefresh={() => { setActualizando(true); cargar(true); }} tintColor={colores.primario} />}
-      onEndReachedThreshold={0.4}
-      onEndReached={() => { if (hayMas && !cargando && reclamos.length) cargar(false); }}
-      ListEmptyComponent={cargando
-        ? <ActivityIndicator color={colores.primario} style={{ marginTop: 30 }} />
-        : <Text style={{ textAlign: 'center', padding: 40, color: colores.textoTenue }}>No hay reclamos {soloPendientes ? 'pendientes' : 'asignados'}.</Text>}
-      renderItem={({ item }) => (
-        <View style={{ paddingHorizontal: 20 }}>
-          <TarjetaReclamo reclamo={item} conGestion onPress={() => router.push({ pathname: '/gestion/[id]', params: { id: item.id } })} />
-        </View>
-      )}
-      ListFooterComponent={hayMas && reclamos.length > 0 ? <ActivityIndicator color={colores.primario} style={{ marginVertical: 16 }} /> : null}
-    />
+    <View style={{ flex: 1, backgroundColor: colores.fondo }}>
+      <FlatList
+        style={{ flex: 1 }}
+        data={reclamos}
+        keyExtractor={(r) => r.id}
+        ListHeaderComponent={encabezado}
+        contentContainerStyle={{ paddingBottom: 30 }}
+        refreshControl={<RefreshControl refreshing={actualizando} onRefresh={() => { setActualizando(true); cargar(true); }} tintColor={colores.primario} />}
+        onEndReachedThreshold={0.4}
+        onEndReached={() => { if (hayMas && !cargando && reclamos.length) cargar(false); }}
+        ListEmptyComponent={cargando
+          ? <ActivityIndicator color={colores.primario} style={{ marginTop: 30 }} />
+          : <Text style={{ textAlign: 'center', padding: 40, color: colores.textoTenue }}>No hay reclamos {soloPendientes ? 'pendientes' : 'asignados'}.</Text>}
+        renderItem={({ item }) => (
+          <View style={{ paddingHorizontal: 20 }}>
+            <TarjetaReclamo reclamo={item} conGestion onPress={() => router.push({ pathname: '/gestion/[id]', params: { id: item.id } })} />
+          </View>
+        )}
+        ListFooterComponent={hayMas && reclamos.length > 0 ? <ActivityIndicator color={colores.primario} style={{ marginVertical: 16 }} /> : null}
+      />
+      <TapaBarraEstado />
+    </View>
   );
 }

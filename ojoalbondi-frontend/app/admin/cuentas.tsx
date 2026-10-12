@@ -1,7 +1,7 @@
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { ActivityIndicator, FlatList, Text, View } from 'react-native';
-import { Ayuda, Boton, Campo, Encabezado, Etiqueta, HojaModal, Seccion, Selector, Tarjeta, TextoError } from '@/componentes/ui';
+import { Ayuda, Boton, Campo, Encabezado, Etiqueta, HojaModal, Seccion, Selector, TapaBarraEstado, Tarjeta, TextoError } from '@/componentes/ui';
 import { NOMBRE_ROL, useSesion } from '@/contextos/SesionContexto';
 import { useTema } from '@/contextos/TemaContexto';
 import { asignarRol, Cuenta, listarCuentas, listarOrganizaciones, Organizacion } from '@/servicios/administracion';
@@ -124,6 +124,7 @@ export default function Cuentas() {
         <Boton titulo="Guardar" onPress={guardar} cargando={guardando} />
         <Boton titulo="Cancelar" variante="secundario" onPress={() => setEditada(null)} />
       </HojaModal>
+      <TapaBarraEstado />
     </View>
   );
 }

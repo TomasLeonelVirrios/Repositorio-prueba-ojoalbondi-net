@@ -9,6 +9,11 @@ export function mensajeDeError(error: unknown, porDefecto = 'Ocurrió un error. 
   const m = String((error as { message?: string })?.message ?? error ?? '').toLowerCase();
 
   // Autenticación (Supabase Auth)
+  // Límite de Supabase Auth (429): el SMTP incluido manda pocos correos por hora
+  if (codigo === 'over_email_send_rate_limit' || (m.includes('rate limit') && m.includes('email'))) {
+    return 'Se enviaron demasiados correos en poco tiempo. Esperá alrededor de una hora e intentá de nuevo.';
+  }
+  if (codigo === 'over_request_rate_limit' || m.includes('rate limit')) return 'Hubo demasiados intentos seguidos. Esperá unos minutos e intentá de nuevo.';
   if (m.includes('invalid login credentials')) return 'El correo o la contraseña son incorrectos.';
   if (m.includes('already registered') || m.includes('already been registered')) return 'Ya existe una cuenta con ese correo.';
   if (m.includes('email not confirmed')) return 'Confirmá tu correo con el mail que te enviamos antes de iniciar sesión.';
